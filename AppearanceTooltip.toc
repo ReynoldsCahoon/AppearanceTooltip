@@ -1,0 +1,11 @@
+## Interface: 30300
+## Title: AppearanceTooltip
+## Author: ReynoldsCahoon, Kemayo
+## Notes: Show the item your mouse is over on your character in a tooltip
+## Version: v1
+## LoadOnDemand: 0
+
+## SavedVariables: AppearanceTooltipDB
+## SavedVariablesPerCharacter: AppearanceTooltipDBPC
+
+addon.lua
