@@ -1,4 +1,4 @@
-### AppearanceTooltip
+# AppearanceTooltip
 
 AppearanceTooltip shows you the appearance of items in your inventory. It does this by attaching a Model frame to the item tooltip, showing your character wearing the item.
 
