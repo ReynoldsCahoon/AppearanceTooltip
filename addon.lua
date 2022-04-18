@@ -1,11 +1,4 @@
-local myname, ns = ...
-local myfullname = GetAddOnMetadata(myname, "Title")
-
-local GetScreenWidth = GetScreenWidth
-local GetScreenHeight = GetScreenHeight
-local IsDressableItem = IsDressableItem
-
-local setDefaults, db
+local db = {}
 
 local tooltip = CreateFrame("Frame", "AppearanceTooltipTooltip", UIParent)
 tooltip:SetClampedToScreen(true)
@@ -21,75 +14,43 @@ tooltip:SetBackdropColor(0.1, 0.1, .2, .99)
 tooltip:Hide()
 
 tooltip:SetScript("OnEvent", function(self, event, ...)
-    self[event](self, ...)
+	if(event == "ADDON_LOADED")then
+		ADDON_LOADED(self, event, ...)
+	elseif (event == "PLAYER_LOGIN") then
+		tooltip.model:SetUnit("player")
+	end
 end)
 tooltip:RegisterEvent("ADDON_LOADED")
 tooltip:RegisterEvent("PLAYER_LOGIN")
-tooltip:RegisterEvent("PLAYER_REGEN_DISABLED")
-tooltip:RegisterEvent("PLAYER_REGEN_ENABLED")
 
-function tooltip:ADDON_LOADED(addon)
-    if addon ~= myname then return end
 
-    _G[myname.."DB"] = setDefaults(_G[myname.."DB"] or {}, {
+function ADDON_LOADED(addon, event, arg1)
+    if arg1 ~= "AppearanceTooltip" then return end
+
+    _G[arg1.."DB"] = setDefaults( {}, {
         modifier = false, -- or "Alt", "Ctrl", "Shift"
-        mousescroll = true,
         rotate = true,
         spin = false,
-        -- zoom = false,
         dressed = false, -- whether the model should be wearing your current outfit, or be naked
-        customModel = false,
-        modelRace = 7, -- raceid (1:human)
-        modelGender = 1, -- 0:male, 1:female
-        notifyKnown = true,
     })
-    db = _G[myname.."DB"]
-    ns.db = db
-
-    self:UnregisterEvent("ADDON_LOADED")
+    db = _G[arg1.."DB"]
+	
+    tooltip:UnregisterEvent("ADDON_LOADED")
 end
-
-function tooltip:PLAYER_LOGIN()
-    tooltip.model:SetUnit("player")
-end
-
-function tooltip:PLAYER_REGEN_ENABLED()
-    if self:IsShown() and db.mousescroll then
-        SetOverrideBinding(tooltip, true, "MOUSEWHEELUP", "AppearanceKnown_TooltipScrollUp")
-        SetOverrideBinding(tooltip, true, "MOUSEWHEELDOWN", "AppearanceKnown_TooltipScrollDown")
-    end
-end
-
-function tooltip:PLAYER_REGEN_DISABLED()
-    ClearOverrideBindings(tooltip)
-end
-
-tooltip:SetScript("OnShow", function(self)
-    if db.mousescroll and not InCombatLockdown() then
-        SetOverrideBinding(tooltip, true, "MOUSEWHEELUP", "AppearanceKnown_TooltipScrollUp")
-        SetOverrideBinding(tooltip, true, "MOUSEWHEELDOWN", "AppearanceKnown_TooltipScrollDown")
-    end
-end);
-
-tooltip:SetScript("OnHide",function(self)
-    if not InCombatLockdown() then
-        ClearOverrideBindings(tooltip);
-    end
-end)
 
 tooltip.model = CreateFrame("DressUpModel", nil, tooltip)
 tooltip.model:SetPoint("TOPLEFT", tooltip, "TOPLEFT", 5, -5)
 tooltip.model:SetPoint("BOTTOMRIGHT", tooltip, "BOTTOMRIGHT", -5, 5)
 
 tooltip.model:SetScript("OnShow", function(self)
-    ns:ResetModel(self)
+    ResetModel(self)
 end)
 
 GameTooltip:HookScript("OnTooltipSetItem", function(self)
-    ns:ShowItem(select(2, self:GetItem()))
+    ShowItem(select(2, self:GetItem()))
 end)
 GameTooltip:HookScript("OnHide", function()
-    ns:HideItem()
+    HideItem()
 end)
 
 ----
@@ -138,22 +99,18 @@ end)
 
 ----
 
-function ns:ShowItem(link)
+function ShowItem(link)
     if not link then return end
     local id = tonumber(link:match("item:(%d+)"))
     if not id or id == 0 then return end
 
     local slot = select(9, GetItemInfo(id))
-    if (not db.modifier or self.modifiers[db.modifier]()) and tooltip.item ~= id then
+    if (not db.modifier or modifiers[db.modifier]()) and tooltip.item ~= id then
         tooltip.item = id
 
-        if self.slot_facings[slot] and IsDressableItem(id) then
-            tooltip.model:SetFacing(self.slot_facings[slot] - (db.rotate and 0.5 or 0))
-
-            -- TODO: zoom, which is tricky because it depends on race and gender
-            -- tooltip.model:SetPosition(unpack(db.zoom and self.slot_positions[slot] or self.slot_positions[DEFAULT]))
-            -- tooltip.model:SetModelScale(1)
-
+        if slot_facings[slot] and IsDressableItem(id) then
+            tooltip.model:SetFacing(slot_facings[slot] - (db.rotate and 0.5 or 0))
+			
             tooltip:Show()
             tooltip.owner = GameTooltip
 
@@ -164,7 +121,7 @@ function ns:ShowItem(link)
                 spinner:Hide()
             end
 
-            self:ResetModel(tooltip.model)
+            ResetModel(tooltip.model)
             tooltip.model:TryOn(link)
         else
             tooltip:Hide()
@@ -172,23 +129,18 @@ function ns:ShowItem(link)
     end
 end
 
-function ns:HideItem()
+function HideItem()
     hider:Show()
 end
 
-function ns:ResetModel(model)
-    if db.customModel then
-        model:SetCustomRace(db.modelRace, db.modelGender)
-        model:RefreshCamera()
-    else
-        model:Dress()
-    end
+function ResetModel(model)
+    model:Dress()
     if not db.dressed then
         model:Undress()
     end
 end
 
-ns.slot_facings = {
+slot_facings = {
     INVTYPE_HEAD = 0,
     INVTYPE_SHOULDER = 0,
     INVTYPE_CLOAK = 3.4,
@@ -212,7 +164,7 @@ ns.slot_facings = {
 
 -- /script AppearanceTooltipTooltip.model:SetPosition(0,0,0)
 -- x,y,z is effectively zoom, horizontal, vertical
-ns.slot_positions = {
+slot_positions = {
     INVTYPE_2HWEAPON = {0.8, -0.3, 0},
     INVTYPE_WEAPON = {0.8, -0.3, 0},
     INVTYPE_WEAPONMAINHAND = {0.8, -0.3, 0},
@@ -225,18 +177,11 @@ ns.slot_positions = {
     [DEFAULT] = {0, 0, 0},
 }
 
-ns.modifiers = {
+modifiers = {
     Shift = IsShiftKeyDown,
     Ctrl = IsControlKeyDown,
     Alt = IsAltKeyDown,
 }
-
--- Utility fun
-
-function ns.Print(...) print("|cFF33FF99".. myfullname.. "|r:", ...) end
-
-local debugf = tekDebug and tekDebug:GetFrame(myname)
-function ns.Debug(...) if debugf then debugf:AddMessage(string.join(", ", tostringall(...))) end end
 
 function setDefaults(options, defaults)
     setmetatable(options, { __index = function(t, k)

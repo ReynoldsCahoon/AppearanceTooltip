@@ -1,8 +1,8 @@
 ## Interface: 30300
 ## Title: AppearanceTooltip
-## Author: ReynoldsCahoon, Kemayo
+## Author: ReynoldsCahoon, retset, Kemayo
 ## Notes: Show the item your mouse is over on your character in a tooltip
-## Version: v1
+## Version: v1.1
 ## LoadOnDemand: 0
 
 ## SavedVariables: AppearanceTooltipDB
