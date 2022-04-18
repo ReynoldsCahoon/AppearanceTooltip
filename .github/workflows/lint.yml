@@ -10,7 +10,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: 'ReynoldsCahoon/AppearanceTooltip'
-      - name: wow-lua-lint
-        uses: davidcraig/action-wow-lint@1.0.0
+      - name: wow-lint
+        uses: davidcraig/action-wow-lint@1.0.1
         with:
             path-to-files: 'addon.lua'
