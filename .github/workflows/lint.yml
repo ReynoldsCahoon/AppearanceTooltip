@@ -11,6 +11,6 @@ jobs:
         with:
           repository: 'ReynoldsCahoon/AppearanceTooltip'
       - name: wow-lint
-        uses: davidcraig/action-wow-lint@1.0.1
+        uses: davidcraig/action-wow-lint@v1.0.1
         with:
             path-to-files: 'addon.lua'
